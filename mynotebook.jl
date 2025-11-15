@@ -36,7 +36,7 @@ end
 
 # ╔═╡ bf43c4f4-11ce-455b-a3d2-5e1c11ab40d5
 begin
-    include("SatsLEO.jl")
+    include("./SatsLEO/SatsLEO.jl")
     using .SatsLEO
 end
 
@@ -56,11 +56,69 @@ html"""
 </style>
 """
 
+# ╔═╡ 20df3e66-d9d0-43a9-9166-8c75cf70d8ac
+# Bien pour initialiser un vecteur mais il faut l'améliorer
+"""
+balanced_vec(P, N)
+
+Construit un vecteur de longueur P contenant une répartition aussi uniforme que possible
+de N satellites entre les P plans orbitaux.
+"""
+function balanced_vec(P, N)
+    base = N ÷ P              # Nombre minimal de satellites par plan
+    r = N % P                 # Plans qui recevront un satellite supplémentaire
+    v = fill(base, P)         # Répartition uniforme initiale
+    for k in 1:r
+        v[k] += 1             # Ajout des satellites restants
+    end
+    return v
+end
+
+# ╔═╡ 8345234a-9906-4182-9412-4c00dc6b703f
+"""
+improve_vec_fixed_N!(vec, F, i_deg, a, eps_deg)
+
+Optimise la répartition de N satellites sur P plans orbitaux (nombre de satellites fixe) en déplaçant un satellite d’un plan vers un autre lorsque cela augmente la couverture moyenne sur une période. L’algorithme répète les déplacements les plus bénéfiques jusqu’à convergence ou jusqu’à 100 itérations.
+"""
+function improve_vec_fixed_N!(vec, F, i_deg, a, eps_deg)
+	
+    cov, N = eval_constellation(vec, F, i_deg, a, eps_deg)
+    P = length(vec)
+
+    for iter in 1:100
+        best_gain = 0.0
+        best_i, best_j = 0, 0
+
+        for i in 1:P, j in 1:P
+            i == j && continue
+            vec[j] == 0 && continue
+
+            vec[i] += 1; vec[j] -= 1 # Test de la config
+	            cov2, _ = eval_constellation(vec, F, i_deg, a, eps_deg)
+	            gain = cov2 - cov
+	            if gain > best_gain # Si ça améliore, on garde i et j pour le refaire après
+	                best_gain = gain
+	                best_i, best_j = i, j
+	            end
+            vec[i] -= 1; vec[j] += 1 # On remet comme avant
+        end
+
+        if best_gain <= 0 # Si convergence, break
+            break
+        end
+
+        vec[best_i] += 1; vec[best_j] -= 1 # On 
+        cov, _ = eval_constellation(vec, F, i_deg, a, eps_deg)
+    end
+
+    vec, cov
+end
+
 # ╔═╡ 6730fbd6-2cdd-4f88-a00c-182a601e6d97
 ## Paramètres
 
 begin
-	h_km=800 			# Altitude des satellites
+	h_km=500 			# Altitude des satellites
 	eps_deg=10 			# Elevation minimale nécéssaire pour voir le satellite depuis le sol
 	i_deg=30 			# Inclinaison orbitale (angle avec l'équateur) pour savoir les lattitudes couvertes
 	P=2 				# Nombre de plans orbitaux
@@ -72,8 +130,31 @@ begin
 	sats=walker_delta(P,S,F,i_deg,a)
 end
 
-# ╔═╡ e67f0e51-c074-4ed6-b38a-fd4afbdaa9be
-r_ecef = [[eci_pos(s, t) for s in sats] for t in 1:1000]
+# ╔═╡ aa86b509-4bc9-4a95-84b6-9063f2e36b63
+begin
+    results = []
+    Cmin = 0.95
+
+    for P in 1:5, N in 2:21
+        vec = balanced_vec(P, N)
+        cov, Nt = eval_constellation(vec, F, i_deg, a, eps_deg)
+        push!(results, (P=P, vec=vec, N=Nt, cov=cov))
+    end
+
+    good = filter(r -> r.cov ≥ Cmin, results)
+
+    Ns   = getfield.(good, :N)
+    idx  = argmin(Ns)
+    best = good[idx]
+end
+
+# ╔═╡ b99bf2bc-6813-4a36-a55b-f9558ef2bab1
+begin
+	P_ = 8
+	N_ = 18
+	vec_ = balanced_vec(P_, N_)
+	vec_opt_, cov_opt_ = improve_vec_fixed_N!(vec_, F, i_deg, a, eps_deg)
+end
 
 # ╔═╡ 41c3fdd3-e596-4f88-beda-16157552fea9
 sats2 = myconstellation([8 8 8],1,i_deg,a)
@@ -154,6 +235,13 @@ let
 end
   ╠═╡ =#
 
+# ╔═╡ e67f0e51-c074-4ed6-b38a-fd4afbdaa9be
+begin
+	sats_ = myconstellation([1,1,10],1,i_deg,a)
+	r_ecef = [[[ecef_from_eci(eci_pos(s, t),t) for s in sats_],coverage_fraction(sats_, t, -i_deg, i_deg, eps_deg)] for t in 1:10]
+	#show_coverage_heatmap(sats_,t,eps_deg)
+end
+
 # ╔═╡ 27790501-c853-4b7d-9fdc-ab78585745fa
 begin
 	p1 = show_coverage_heatmap(sats, t, eps_deg)
@@ -203,7 +291,10 @@ end
 # ╠═6f253d7b-c6be-4755-a81e-75c8bd13c642
 # ╠═daca6429-e148-42d3-9499-bfd1dbc04531
 # ╠═bf43c4f4-11ce-455b-a3d2-5e1c11ab40d5
-# ╠═e67f0e51-c074-4ed6-b38a-fd4afbdaa9be
+# ╟─20df3e66-d9d0-43a9-9166-8c75cf70d8ac
+# ╠═8345234a-9906-4182-9412-4c00dc6b703f
+# ╠═aa86b509-4bc9-4a95-84b6-9063f2e36b63
+# ╠═b99bf2bc-6813-4a36-a55b-f9558ef2bab1
 # ╠═6730fbd6-2cdd-4f88-a00c-182a601e6d97
 # ╠═41c3fdd3-e596-4f88-beda-16157552fea9
 # ╠═4985fe03-5e41-4ad6-899e-d864639107f8
@@ -211,6 +302,7 @@ end
 # ╠═47fee197-c516-4624-a8a8-63345ade9841
 # ╟─d97c7a1e-5929-4d50-aa6e-c1b029be1861
 # ╟─5b53534e-2155-4675-a271-454b92e3c96e
+# ╠═e67f0e51-c074-4ed6-b38a-fd4afbdaa9be
 # ╟─27790501-c853-4b7d-9fdc-ab78585745fa
 # ╠═287f599c-0932-4d5c-ae28-16c6488d585a
 # ╠═84ff8c5f-5c92-4336-acb4-cd643d3e56e6
