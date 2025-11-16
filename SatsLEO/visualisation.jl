@@ -1,7 +1,5 @@
 using LinearAlgebra, Plots
 
-export show_coverage_heatmap, plot_constellation!, plot_earth
-
 """
 show_coverage_heatmap(sats,t,eps_deg)
 
@@ -79,11 +77,11 @@ function plot_earth(;Rearth=Re)
 end
 
 """
-plot_constellation!(sats,t;Rearth=Re)
+plot_constellation(sats,t;Rearth=Re)
 
 Plot les positions instantanées des satellites en 3D autour de la Terre.
 """
-function plot_constellation!(sats,t;Rearth=Re)
+function plot_constellation(sats,t;Rearth=Re)
 	p = plot_earth()
 	
 	θs = range(0, 2π, 100)

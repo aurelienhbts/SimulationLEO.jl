@@ -8,7 +8,7 @@ const ωe = 7.2921150e-5 	# Vitesse de rotation de la Terre (rad/s)
 ## Structure pour stocker les satellites (définis par a, i, Ω et M0).
 struct Sat
     a::Float64   # Demi-grand axe (m) → distance moyenne au centre de la Terre
-    i::Float64   # Inclinaison orbitale (rad) → angle entre le plan orbital et l’équateur
+    i::Float64   # Inclinaison orbitale (rad) → angle entre le plan orbital et l'équateur
     Ω::Float64   # Longitude du nœud ascendant (rad) → orientation du plan orbital autour de la Terre
     M0::Float64  # Anomalie moyenne initiale (rad) → position du satellite sur son orbite
 end
@@ -18,8 +18,8 @@ deg2rad(x)=x*pi/180
 rad2deg(x)=180*x/pi
 
 ## Matrices de rotation
-R1(θ)=[1 0 0; 0 cos(θ) -sin(θ); 0 sin(θ) cos(θ)] # Autour de l'axe X → Sert pour incliner le plan orbital d’un angle i (l'inclinaison).
-R3(θ)=[cos(θ) -sin(θ) 0; sin(θ) cos(θ) 0; 0 0 1] # Autour de l'axe Z → Sert pour tourner le plan orbital d’un angle Ω (ascension du nœud) ou de l’anomalie vraie ν.
+R1(θ)=[1 0 0; 0 cos(θ) -sin(θ); 0 sin(θ) cos(θ)] # Autour de l'axe X → Sert pour incliner le plan orbital d'un angle i (l'inclinaison).
+R3(θ)=[cos(θ) -sin(θ) 0; sin(θ) cos(θ) 0; 0 0 1] # Autour de l'axe Z → Sert pour tourner le plan orbital d'un angle Ω (ascension du nœud) ou de l'anomalie vraie ν.
 
 """
 ecef_from_eci(r,t)
@@ -40,7 +40,7 @@ function latlon_from_ecef(r)
     ρ = norm(r) # Distance entre le satellite et le centre de la Terre
 	
     ϕ = asin(z / ρ) 	# Latitude -> angle entre le vecteur position et le plan équatorial.  
-    λ = atan(y, x) 		# Longitude -> angle dans le plan équatorial entre l’axe X (Greenwich) et la projection du vecteur sur ce plan.
+    λ = atan(y, x) 		# Longitude -> angle dans le plan équatorial entre l'axe X (Greenwich) et la projection du vecteur sur ce plan.
 
     return rad2deg(ϕ), rad2deg(λ)
 end
@@ -66,7 +66,7 @@ function walker_delta(P,S,F,i_deg,a)
     sats = Sat[]
     for p in 0:P-1, s in 0:S-1 # On itère sur chaque plan orbital et sur chaque satellite par plan
         
-		Ω = 2π * p / P # Ascension du nœud (Ω) → Chaque plan orbital est séparé de 360°/P autour de l’axe z.
+		Ω = 2π * p / P # Ascension du nœud (Ω) → Chaque plan orbital est séparé de 360°/P autour de l'axe z.
 		
         # Répartition uniforme des satellites sur chaque orbite (s/S),
         M0 = 2π * (s / S + (F * p) / (S * P)) # Anomalie moyenne initiale (M₀) + déphasage (F*p)/(S*P) pour éviter que les plans soient alignés.
@@ -87,7 +87,7 @@ function myconstellation(vec,F,i_deg,a)
 	for p in 1:P
 		S = vec[p]
 		for s in 1:S
-			Ω = 2π * p / P # Ascension du nœud (Ω) → Chaque plan orbital est séparé de 360°/P autour de l’axe z.
+			Ω = 2π * p / P # Ascension du nœud (Ω) → Chaque plan orbital est séparé de 360°/P autour de l'axe z.
 			
 			# Répartition uniforme des satellites sur chaque orbite (s/S),
         	M0 = 2π * (s / S + (F * p) / (S * P)) # Anomalie moyenne initiale (M₀) + déphasage (F*p)/(S*P) pour éviter que les plans soient alignés.

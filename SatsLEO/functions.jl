@@ -1,9 +1,7 @@
 ## FONCTIONS dev mais finalement pas si ouf
+# Je les garde ici, on sait jamais que ça puisse être utile plus tard
 
-
-
-
-# Va juste augmenter le nombre de satellites et ne va pas trouver de configuration optimale
+# Va juste augmenter le nombre de satellites et ne va pas trouver de configuration optimale car N va juste augmenter
 """
 improve_vec!(vec, F, i_deg, a, eps_deg)
 
@@ -71,4 +69,61 @@ function biased_vec(P, N; w1=4.0, w2=4.0, w3=4.0)
     end
 
     return v
+end
+
+# Bien pour initialiser un vecteur mais il faut l'améliorer
+"""
+balanced_vec(P, N)
+
+Construit un vecteur de longueur P contenant une répartition aussi uniforme que possible
+de N satellites entre les P plans orbitaux.
+"""
+function balanced_vec(P, N)
+    base = N ÷ P              # Nombre minimal de satellites par plan
+    r = N % P                 # Plans qui recevront un satellite supplémentaire
+    v = fill(base, P)         # Répartition uniforme initiale
+    for k in 1:r
+        v[k] += 1             # Ajout des satellites restants
+    end
+    return v
+end
+
+# Pas mal mais la fonction ne va pas trouver la configuration optimale car ça va dépendre de l'ordre et elle ne passe qu'une seule fois sur chaque couple i,j. 
+"""
+improve_vec_fixed_N!(vec, F, i_deg, a, eps_deg)
+
+Optimise la répartition de N satellites sur P plans orbitaux (nombre de satellites fixe) en déplaçant un satellite d'un plan vers un autre lorsque cela augmente la couverture moyenne sur une période. L’algorithme répète les déplacements les plus bénéfiques jusqu’à convergence ou jusqu’à 100 itérations.
+"""
+function improve_vec_fixed_N!(vec, F, i_deg, a, eps_deg)
+	
+    cov, N = eval_constellation(vec, F, i_deg, a, eps_deg)
+    P = length(vec)
+
+    for iter in 1:100
+        best_gain = 0.0
+        best_i, best_j = 0, 0
+
+        for i in 1:P, j in 1:P
+            i == j && continue
+            vec[j] == 0 && continue
+
+            vec[i] += 1; vec[j] -= 1 # Test de la config
+	            cov2, _ = eval_constellation(vec, F, i_deg, a, eps_deg)
+	            gain = cov2 - cov
+	            if gain > best_gain # Si ça améliore, on garde i et j pour le refaire après
+	                best_gain = gain
+	                best_i, best_j = i, j
+	            end
+            vec[i] -= 1; vec[j] += 1 # On remet comme avant
+        end
+
+        if best_gain <= 0 # Si convergence, break
+            break
+        end
+
+        vec[best_i] += 1; vec[best_j] -= 1 # On refait 
+        cov, _ = eval_constellation(vec, F, i_deg, a, eps_deg)
+    end
+
+    return vec, cov
 end
