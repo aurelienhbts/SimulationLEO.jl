@@ -56,8 +56,11 @@ html"""
 </style>
 """
 
-# ╔═╡ 2a60ed85-bc78-42e4-ae5a-f42b8c9be9d1
+# ╔═╡ 8a2943fe-4a3e-40e7-a38c-61229134646e
 empty!(FITCACHE) # A relancer avant de lancer une nouvelle config de P et de N
+
+# ╔═╡ 66528144-5768-47a2-87a5-004eb746f6ee
+length(FITCACHE)
 
 # ╔═╡ aa86b509-4bc9-4a95-84b6-9063f2e36b63
 # ╠═╡ disabled = true
@@ -109,11 +112,21 @@ begin
 	sats=walker_delta(P,S,F,i_deg,a)
 end
 
-# ╔═╡ 1ef59fe9-61f3-410a-b022-17d1592a2fc3
+# ╔═╡ fff4d4f2-3965-4dbc-a76b-e649827a063d
 begin
+	atest = 550 *1e3 + Re
 	Pmax = 6
 	Ntest = 19
-	best_vec, best_cov = evolve_vec(Pmax, Ntest, F, i_deg, a, eps_deg; popsize=20, generations=100, Cmin=50.0, Pbonus=true)
+	configs = Dict()
+	Threads.@threads for _ in 1:1000
+		best_vec, best_cov = evolve_vec(Pmax, Ntest, F, i_deg, atest, eps_deg; popsize=20, generations=300, Pbonus=false)
+		if !haskey(configs,(best_vec,best_cov))
+			configs[(best_vec,best_cov)] = 1
+		else 
+			configs[(best_vec,best_cov)] += 1
+		end
+	end
+	sort!(collect(configs), by = x -> x[1][2], rev=true)
 end
 
 # ╔═╡ 41c3fdd3-e596-4f88-beda-16157552fea9
@@ -183,8 +196,9 @@ end
 # ╠═6f253d7b-c6be-4755-a81e-75c8bd13c642
 # ╠═daca6429-e148-42d3-9499-bfd1dbc04531
 # ╠═bf43c4f4-11ce-455b-a3d2-5e1c11ab40d5
-# ╠═1ef59fe9-61f3-410a-b022-17d1592a2fc3
-# ╠═2a60ed85-bc78-42e4-ae5a-f42b8c9be9d1
+# ╠═8a2943fe-4a3e-40e7-a38c-61229134646e
+# ╠═fff4d4f2-3965-4dbc-a76b-e649827a063d
+# ╠═66528144-5768-47a2-87a5-004eb746f6ee
 # ╠═aa86b509-4bc9-4a95-84b6-9063f2e36b63
 # ╠═6730fbd6-2cdd-4f88-a00c-182a601e6d97
 # ╠═41c3fdd3-e596-4f88-beda-16157552fea9
