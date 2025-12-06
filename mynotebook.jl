@@ -31,12 +31,12 @@ using Base.Threads # Pour la performance
 # ╔═╡ daca6429-e148-42d3-9499-bfd1dbc04531
 begin
 	using Logging
-	Logging.disable_logging(LogLevel(1000));
+	Logging.disable_logging(LogLevel(1)) # Enlever les warnings
 end
 
 # ╔═╡ bf43c4f4-11ce-455b-a3d2-5e1c11ab40d5
 begin
-    include("./SatsLEO/SatsLEO.jl")
+    include("./SatsLEO/SatsLEO.jl") # Module SatsLEO dev pour le projet
     using .SatsLEO
 end
 
@@ -100,7 +100,7 @@ if !isfile("./Figures/cov.gif") #!isfile("./Figures/sats.gif")
 	satsgif = myconstellation(vec, F, i_deg, a)
 	Tmax = 10000
 	step = 100
-    for t in 0:step:Tmax
+    Threads.@threads for t in 0:step:Tmax
 		show_coverage_heatmap(satsgif, t, eps_deg)
 		#plot_constellation(satsgif,t)
         savefig(joinpath(folder, "frame_$(Int(t/step)).png"))
@@ -120,7 +120,7 @@ if !isfile("./Figures/satstest.gif")
 	satsgif_ = myconstellation(vec_, F, 40, a)
 	Tmax_ = 10000
 	step_ = 100
-    for t_ in 0:step_:Tmax_
+    Threads.@threads for t_ in 0:step_:Tmax_
 		plot_constellation(satsgif_,t_)
         savefig(joinpath(folder_, "frame_$(Int(t_/step_)).png"))
     end
@@ -154,27 +154,27 @@ mean_coverage_fraction(sats2, -i_deg, i_deg, eps_deg; n=100, dlat=2, dlon=2)
 PlutoUI.LocalResource("./Figures/convergence_mean_coverage.png")
 
 # ╔═╡ 4a646cfe-ec7f-444e-a987-de5dcf2ff38e
-empty(FITCACHE) # A executer avant de changer de N, P ou a 
+empty!(FITCACHE) # A executer avant de changer de N, P, a ou des paramètres liés à 'fitness'
 
 # ╔═╡ 524192b6-7009-4907-978b-d45ef572260b
 length(FITCACHE)
 
-# ╔═╡ f07b36e2-f9b0-4248-8cf1-1901485e9052
+# ╔═╡ 5dfbca41-f0c7-4a1f-8f29-92a1376efcc1
 FITCACHE
 
 # ╔═╡ fff4d4f2-3965-4dbc-a76b-e649827a063d
 begin
-	iter = 50
+	iter = 10
 	atest = 550 *1e3 + Re
 	Pmax = 6
 	Ntest = 19
 	configs = Dict()
-	Threads.@threads for _ in 1:iter
-		best_vec, best_cov = evolve_vec(Pmax, Ntest, F, i_deg, atest, eps_deg; popsize=20, generations=300, Pbonus=false)
+	for _ in 1:iter
+		best_vec, best_cov, best_N = evolve_vec(Pmax, Ntest, F, i_deg, atest, eps_deg; popsize=20, generations=30, Cmin=90, Pbonus=true, Pbonus_coef=0.75, Npenalty=true, Npenalty_coef=0.1)
 		if !haskey(configs,(best_vec,best_cov))
-			configs[(best_vec,best_cov)] = 1/iter
+			configs[(best_vec,best_cov,best_N)] = 1/iter * 100
 		else 
-			configs[(best_vec,best_cov)] += 1/iter
+			configs[(best_vec,best_cov,best_N)] += 1/iter * 100
 		end
 	end
 	configs = sort!(collect(configs), by = x -> x[1][2], rev=true)
@@ -211,7 +211,7 @@ PlutoUI.LocalResource("./Figures/convergence_cov_altitude_2.png")
 # ╟─5b53534e-2155-4675-a271-454b92e3c96e
 # ╠═4a646cfe-ec7f-444e-a987-de5dcf2ff38e
 # ╠═524192b6-7009-4907-978b-d45ef572260b
-# ╠═f07b36e2-f9b0-4248-8cf1-1901485e9052
+# ╠═5dfbca41-f0c7-4a1f-8f29-92a1376efcc1
 # ╠═fff4d4f2-3965-4dbc-a76b-e649827a063d
 # ╟─77df1252-0b82-4ea1-bbd2-af8615bd8e10
 # ╟─556db4d2-7329-4c7d-b1ee-d98245d8756a
