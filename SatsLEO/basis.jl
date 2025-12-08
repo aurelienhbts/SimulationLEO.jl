@@ -6,13 +6,13 @@ const Re = 6.371e6 		    # Rayon moyen de la Terre (m)s
 const ωe = 7.2921150e-5 	# Vitesse de rotation de la Terre (rad/s)
 
 """
-Sat
+  Sat
 
 Structure représentant un satellite sur une orbite (supposée circulaire) autour de la Terre,
 définie par ses éléments orbitaux principaux : demi-grand axe, inclinaison, longitude du
 nœud ascendant et anomalie moyenne initiale.
 
-Champs
+# Champs
 - a  : Demi-grand axe (m), distance moyenne au centre de la Terre.
 - i  : Inclinaison orbitale (rad), angle entre le plan orbital et le plan équatorial.
 - Ω  : Longitude du nœud ascendant (rad), orientation du plan orbital autour de l'axe de rotation terrestre.
@@ -26,44 +26,44 @@ struct Sat
 end
 
 """
-deg2rad(x)
+  deg2rad(x)
 
 Convertit un angle en degrés vers des radians.
 
-Argument
+# Argument
 - x : Angle en degrés.
 
-Valeur retournée
+# Valeur retournée
 - L'angle correspondant en radians.
 """
 deg2rad(x) = x * π / 180
 
 
 """
-rad2deg(x)
+  rad2deg(x)
 
 Convertit un angle en radians vers des degrés.
 
-Argument
+# Argument
 - x : Angle en radians.
 
-Valeur retournée
+# Valeur retournée
 - L'angle correspondant en degrés.
 """
 rad2deg(x) = 180 * x / pi
 
 """
-R1(θ)
+  R1(θ)
 
 Matrice de rotation autour de l'axe X d'un angle `θ` (en radians).
 
 Utilisation :
 - Rotation d'inclinaison d'un plan orbital (angle `i`).
 
-Argument
+# Argument
 - θ : Angle de rotation en radians.
 
-Valeur retournée
+# Valeur retournée
 - Matrice 3x3 représentant la rotation autour de l'axe X.
 """
 R1(θ) = [1 0 0;
@@ -72,7 +72,7 @@ R1(θ) = [1 0 0;
 
 
 """
-R3(θ)
+  R3(θ)
 
 Matrice de rotation autour de l'axe Z d'un angle `θ` (en radians).
 
@@ -81,10 +81,10 @@ Utilisation :
 - Rotation selon l'anomalie vraie (ν).
 - Rotation horaire du repère dans les conversions ECI/ECEF.
 
-Argument
+# Argument
 - θ : Angle de rotation en radians.
 
-Valeur retournée
+# Valeur retournée
 - Matrice 3x3 représentant la rotation autour de l'axe Z.
 """
 R3(θ) = [ cos(θ) -sin(θ) 0;
@@ -93,18 +93,16 @@ R3(θ) = [ cos(θ) -sin(θ) 0;
 
 
 """
-ecef_from_eci(r, t)
+  ecef_from_eci(r, t)
 
-Convertit un vecteur de position d'un satellite du repère inertiel ECI
-(Earth-Centered Inertial) vers le repère tournant ECEF (Earth-Centered Earth-Fixed).  
-La transformation applique une rotation autour de l'axe Z d'un angle égal
-à la rotation terrestre sur l'intervalle de temps `t`.
+Convertit un vecteur de position d'un satellite du repère inertiel ECI (Earth-Centered Inertial) vers le repère tournant ECEF (Earth-Centered Earth-Fixed).  
+La transformation applique une rotation autour de l'axe Z d'un angle égal à la rotation terrestre sur l'intervalle de temps `t`.
 
-Arguments
+# Arguments
 - r : Vecteur position du satellite dans le repère ECI.
 - t : Temps écoulé (en secondes) depuis l'instant de référence.
 
-Valeur retournée
+# Valeur retournée
 - Vecteur position transformé dans le repère ECEF.
 """
 function ecef_from_eci(r,t)
@@ -112,15 +110,14 @@ function ecef_from_eci(r,t)
 end
 
 """
-latlon_from_ecef(r)
+  latlon_from_ecef(r)
 
-Convertit un vecteur position exprimé dans le repère ECEF (Earth-Centered Earth-Fixed)
-en coordonnées géographiques latitude-longitude, exprimées en degrés.
+Convertit un vecteur position exprimé dans le repère ECEF (Earth-Centered Earth-Fixed) en coordonnées géographiques latitude-longitude, exprimées en degrés.
 
-Arguments
+# Arguments
 - r : Vecteur position (x, y, z) en coordonnées ECEF.
 
-Valeurs retournées
+# Valeurs retournées
 - (latitude_deg, longitude_deg) : Latitude et longitude en degrés.
 """
 function latlon_from_ecef(r)
@@ -134,17 +131,16 @@ function latlon_from_ecef(r)
 end
 
 """
-eci_pos(sat, t; mu=μ)
+  eci_pos(sat, t; mu=μ)
 
-Calcule la position d'un satellite dans le repère inertiel ECI (Earth-Centered Inertial)
-à l'instant `t`, en supposant une orbite circulaire.
+Calcule la position d'un satellite dans le repère inertiel ECI (Earth-Centered Inertial) à l'instant `t`, en supposant une orbite circulaire.
 
-Arguments
+# Arguments
 - sat : Structure décrivant le satellite (doit contenir a, i, Ω, M0).
 - t   : Temps écoulé (en secondes) depuis l'instant de référence.
 - mu  : Paramètre gravitationnel (par défaut `μ`).
 
-Valeur retournée
+# Valeur retournée
 - Vecteur position du satellite dans le repère ECI.
 """
 function eci_pos(sat,t;mu=μ)
@@ -155,20 +151,18 @@ function eci_pos(sat,t;mu=μ)
 end
 
 """
-walker_delta(P, S, F, i_deg, a)
+  walker_delta(P, S, F, i_deg, a)
 
-Construit une constellation de type Walker-Delta, répartissant uniformément
-les satellites sur P plans orbitaux inclinés, avec S satellites par plan et
-un phasage défini par F.
+Construit une constellation de type Walker-Delta, répartissant uniformément les satellites sur P plans orbitaux inclinés, avec S satellites par plan et un phasage défini par F.
 
-Arguments
+# Arguments
 - P      : Nombre total de plans orbitaux.
 - S      : Nombre de satellites par plan orbital.
 - F      : Facteur de déphasage entre les plans (Walker phasing).
 - i_deg  : Inclinaison orbitale (en degrés).
 - a      : Demi-grand axe de l'orbite (en mètres).
 
-Valeur retournée
+# Valeur retournée
 - Un vecteur de structures `Sat`, chacune définie par ses paramètres
   orbitaux (a, i, Ω, M0).
 """
@@ -186,20 +180,18 @@ function walker_delta(P,S,F,i_deg,a)
 end
 
 """
-myconstellation(vec, F, i_deg, a)
+  myconstellation(vec, F, i_deg, a)
 
-Construit une constellation de type Walker-Delta **généralisée**, où le nombre
-de satellites par plan orbital est défini par le vecteur `vec`.  
-Cela permet une plus grande flexibilité que la version classique
-`walker_delta(P, S, F, i_deg, a)`.
+Construit une constellation de type Walker-Delta **généralisée**, où le nombre de satellites par plan orbital est défini par le vecteur `vec`.  
+Cela permet une plus grande flexibilité que la version classique `walker_delta(P, S, F, i_deg, a)`.
 
-Arguments
+# Arguments
 - vec    : Vecteur de longueur P, où `vec[p]` représente le nombre de satellites dans le plan orbital p.
 - F      : Paramètre de phasage (Walker phasing) appliqué entre les plans.
 - i_deg  : Inclinaison orbitale en degrés.
 - a      : Demi-grand axe de l'orbite (en mètres).
 
-Valeur retournée
+# Valeur retournée
 - Un vecteur d'objets `Sat` correspondant aux satellites définis par (a, i, Ω, M0).
 """
 function myconstellation(vec,F,i_deg,a)

@@ -1,15 +1,15 @@
 """
-random_vec(P, N)
+    random_vec(P, N)
 
 Génère un vecteur aléatoire de longueur P représentant une répartition libre
 de N satellites parmi P plans orbitaux.
 
-Arguments
+# Arguments
 - P : Nombre total de plans orbitaux disponibles.
 - N : Nombre total de satellites à répartir.
 
-Valeur retournée
-- Un vecteur entier de longueur P contenant la distribution aléatoire des N satellites.
+# Valeur retournée
+- Un vecteur de longueur P contenant la distribution aléatoire des N satellites.
 """
 function random_vec(P, N)
     v = zeros(Int, P)       # Compteur de satellites par plan
@@ -21,20 +21,21 @@ function random_vec(P, N)
 end
 
 """
-mutate_vec_fixedN!(vec; p_mut=0.3)
+    mutate_vec_fixedN(vec; p_mut=0.3)
 
 Effectue une mutation du vecteur `vec` en déplaçant éventuellement des satellites
 d'un plan orbital vers un autre.
 
-Arguments
+# Argument
 - vec     : Vecteur de taille P représentant la répartition actuelle des satellites.
-- p_mut   : Probabilité qu'une mutation soit appliquée à chacun des essais effectués
-            à travers les P plans orbitaux.
 
-Valeur retournée
+# Paramètre optionnel
+- p_mut   : Probabilité qu'une mutation soit appliquée à chacun des essais effectués à travers les P plans orbitaux.
+
+# Valeur retournée
 - Un nouveau vecteur muté, basé sur `vec`, sans modifier l'original.
 """
-function mutate_vec_fixedN!(vec; p_mut=0.3)
+function mutate_vec_fixedN(vec; p_mut=0.3)
     P = length(vec)
     v = copy(vec)
     for _ in 1:P
@@ -50,24 +51,22 @@ function mutate_vec_fixedN!(vec; p_mut=0.3)
 end
 
 """
-fitness_fixedN(vec, F, i_deg, a, eps_deg; Cmin=75.0, Pbonus=true)
+    fitness_fixedN(vec, F, i_deg, a, eps_deg; Cmin=75.0, Pbonus=true)
 
 Évalue la qualité d'une constellation candidate.
 
-Arguments principaux
+# Arguments
 - vec      : Vecteur de taille P indiquant le nombre de satellites dans chaque plan orbital.
 - F        : Paramètre de phasage (Walker-Delta) utilisé par `eval_constellation`.
 - i_deg    : Inclinaison orbitale en degrés.
 - a        : Demi-grand axe de l'orbite (en mètres), généralement Re + altitude.
 - eps_deg  : Angle d'élévation minimal (en degrés) nécessaire pour qu'un satellite couvre un point au sol.
 
-Paramètres optionnels
-- Cmin     : Seuil minimal de couverture acceptable.  
-             Si la couverture retournée par `eval_constellation` est < Cmin, une pénalité de -100 est appliquée.
-- Pbonus   : Si true, récompense légèrement les vecteurs qui utilisent moins de plans orbitaux
-             (bonus proportionnel au nombre de plans vides).
+# Paramètres optionnels
+- Cmin     : Seuil minimal de couverture acceptable. Si la couverture retournée par `eval_constellation` est < Cmin, une pénalité de -100 est appliquée.
+- Pbonus   : Si true, récompense légèrement les vecteurs qui utilisent moins de plans orbitaux (bonus proportionnel au nombre de plans vides).
 
-Valeur retournée
+# Valeur retournée
 - fit      : Score de qualité de la constellation.  
              Maximisé lorsque la couverture est haute et que la structure utilise peu de plans.
 """
@@ -89,11 +88,11 @@ function fitness_fixedN(vec, F, i_deg, a, eps_deg; Cmin=75.0, Pbonus=true)
 end
 
 """
-evolve_vec_fixedN(P, N, F, i_deg, a, eps_deg; popsize=20, generations=30, Cmin=0.0, Pbonus=true)
+    evolve_vec_fixedN(P, N, F, i_deg, a, eps_deg; popsize=20, generations=30, Cmin=0.0, Pbonus=true)
 
 Algorithme génétique simple pour optimiser la répartition de N satellites sur P plans orbitaux.
 
-Arguments principaux
+# Arguments
 - P        : Nombre total de plans orbitaux possibles.
 - N        : Nombre total de satellites à répartir sur les P plans.
 - F        : Paramètre de phasage (Walker-Delta) utilisé dans `eval_constellation` pour définir la géométrie de la constellation.
@@ -101,13 +100,13 @@ Arguments principaux
 - a        : Demi-grand axe de l'orbite (en mètres), typiquement Re + altitude.
 - eps_deg  : Angle d'élévation minimal (en degrés) pour considérer qu'un satellite couvre un point au sol.
 
-Paramètres optionnels
+# Paramètres optionnels
 - popsize      : Taille de la population de vecteurs candidats (nombre de solutions évaluées par génération).
 - generations  : Nombre de générations de l'algorithme génétique (profondeur de la recherche).
 - Cmin         : Seuil minimal de couverture ; si la couverture moyenne est < Cmin, une pénalité forte est appliquée dans `fitness`.
 - Pbonus       : Si true, ajoute un bonus dans `fitness` pour les configurations qui utilisent moins de plans orbitaux (favorise les plans vides).
 
-Valeurs de retour
+# Valeurs de retour
 - best_vec : Vecteur de taille P contenant le nombre de satellites par plan pour la meilleure configuration trouvée.
 - cov      : Couverture moyenne correspondante (telle que renvoyée par `eval_constellation`, calculée avec une résolution plus fine à la fin).
 """
@@ -124,13 +123,13 @@ function evolve_vec_fixedN(P, N, F, i_deg, a, eps_deg; popsize=20, generations=3
         
         if fits[order[1]] > best_fit
             best_fit = fits[order[1]] # Mise à jour de best_fit
-            best_vec = elite[1]
+            best_vec = elite[1] # Mise à jour de best_vec
         end
 
         newpop = copy(elite)
         while length(newpop) < popsize
             p = elite[rand(1:end)]
-            child = mutate_vec_fixedN!(p) # Mutation d'un vecteur aléatoire
+            child = mutate_vec_fixedN(p) # Mutation d'un vecteur aléatoire
             push!(newpop, child) # Ajout du mutant
         end
         population = newpop
@@ -141,30 +140,31 @@ function evolve_vec_fixedN(P, N, F, i_deg, a, eps_deg; popsize=20, generations=3
 end
 
 """
-mutate_vec!(vec; p_mut=0.3, p_add=0.05)
+    mutate_vec(vec; p_mut=0.3, p_add=0.01)
 
-Effectue une mutation du vecteur `vec` en déplaçant éventuellement des satellites
-d'un plan orbital vers un autre et/ou en ajoutant un satellite sur un plan.
+Applique une mutation sur la configuration orbitale représentée par `vec`.
 
-Arguments
-- vec    : Vecteur de taille P représentant la répartition actuelle des satellites.
-- p_mut  : Probabilité d'appliquer une mutation classique (déplacement entre plans).
-- p_add  : Probabilité d'ajouter un satellite sur un plan choisi aléatoirement.
+# Arguments
+- `vec  : Vecteur de taille `P` indiquant le nombre de satellites par plan orbital.
 
-Valeur retournée
-- Un nouveau vecteur muté, basé sur `vec`, sans modifier l'original.
+# Paramètres optionnels
+- `p_mut    : Probabilité de déplacer un satellite d'un plan vers un autre (répété `P` fois).
+- `p_add    : Probabilité d'ajouter un satellite sur un plan choisi aléatoirement.
+
+# Retour
+- Nouveau vecteur muté, basé sur `vec` (l'original n'est pas modifié).
 """
-function mutate_vec!(vec; p_mut=0.3, p_add=0.01)
+function mutate_vec(vec; p_mut=0.3, p_add=0.01)
     P = length(vec)
     v = copy(vec)
 
     for _ in 1:P
         if rand() < p_mut # Proba relativement élevée (on le fait P fois) de modifier la configuration 
-            i = rand(1:P)
-            j = rand(1:P)
-            (i == j || v[i] <= 0) && continue
-            v[i] -= 1
-            v[j] += 1
+            i, j = rand(1:P, 2)
+            if v[i] > 0
+                v[i] -= 1
+                v[j] += 1
+            end
         end
     end
 
@@ -176,33 +176,29 @@ function mutate_vec!(vec; p_mut=0.3, p_add=0.01)
     return v
 end
 
-
 # Dictionnaire pour stocker des configurations et une couverture associé (pour ne pas recalculer ce qui a déjà été calculé)
 const FITCACHE = Dict{Tuple{Vararg{Int}}, Float64}()
 
 """
-fitness(vec, F, i_deg, a, eps_deg; Cmin=95.0, Pbonus=true, Pbonus_coef=0.2, Npenalty=true, Npenalty_coef=0.3)
+    fitness(vec, F, i_deg, a, eps_deg; Cmin=95.0, Pbonus=true, Pbonus_coef=0.2, Npenalty=true, Npenalty_coef=0.3)
 
 Fonction de coût qui évalue la qualité d'une configuration en fonction de la couverture et (optionel) du nombre de plans vides et du nombre total de satellites.
 
-Arguments principaux
+# Arguments
 - vec         : Vecteur de taille P indiquant le nombre de satellites par plan orbital.
 - F           : Paramètre de phasage (Walker-Delta).
 - i_deg       : Inclinaison orbitale en degrés.
 - a           : Demi-grand axe orbital (en mètres).
 - eps_deg     : Angle d'élévation minimal requis pour la visibilité.
 
-Paramètres optionnels
-- Cmin            : Seuil minimal de couverture.  
-                    Si la couverture retournée est < Cmin, une pénalité forte (-100)
-                    est appliquée et aucune pénalité liée au nombre de satellites
-                    n'est prise en compte.
+# Paramètres optionnels
+- Cmin            : Seuil minimal de couverture. Si la couverture retournée est < Cmin, aucune pénalité liée au nombre de satellites n'est prise en compte.
 - Pbonus          : Active un bonus proportionnel au nombre de plans orbitaux inutilisés.
 - Pbonus_coef     : Coefficient du bonus appliqué par plan vide.
 - Npenalty        : Active une pénalité proportionnelle au nombre total de satellites.
 - Npenalty_coef   : Coefficient de pénalité par satellite.
 
-Valeur retournée
+# Valeur retournée
 - fit : Score de la configuration.
 """
 function fitness(vec, F, i_deg, a, eps_deg; Cmin=95.0, Pbonus=true, Pbonus_coef=0.2, Npenalty=true, Npenalty_coef=0.3)
@@ -232,13 +228,13 @@ end
 
 
 """
-evolve_vec(P, N, F, i_deg, a, eps_deg; popsize=20, generations=30, Cmin=0.0, Pbonus=true, Pbonus_coef=0.2, Npenalty=true, Npenalty_coef=0.3)
+    evolve_vec(P, N, F, i_deg, a, eps_deg; popsize=20, generations=30, Cmin=0.0, Pbonus=true, Pbonus_coef=0.2, Npenalty=true, Npenalty_coef=0.3, p_mut=0.3, p_add=0.01)
 
 Algorithme génétique optimisant la répartition de `N` satellites sur `P`
 plans orbitaux. Chaque solution candidate est un vecteur d'entiers représentant
 le nombre de satellites par plan orbital, évalué via la fonction `fitness`.
 
-Arguments principaux
+# Arguments
 - P             : Nombre total de plans orbitaux disponibles.
 - N             : Nombre total de satellites à répartir sur ces P plans.
 - F             : Paramètre de phasage (Walker-Delta) utilisé par `eval_constellation`.
@@ -246,23 +242,23 @@ Arguments principaux
 - a             : Demi-grand axe de l'orbite (en mètres).
 - eps_deg       : Angle d'élévation minimal requis pour qu'un satellite couvre un point au sol.
 
-Paramètres optionnels
+# Paramètres optionnels
 - popsize          : Taille de la population de candidats par génération.
 - generations      : Nombre total de générations de l'algorithme génétique.
-- Cmin             : Seuil minimal de couverture ; si cov < Cmin, `fitness`
-                     applique une forte pénalité.
-- Pbonus           : Active un bonus dans `fitness` pour les configurations
-                     utilisant moins de plans orbitaux.
+- Cmin            : Seuil minimal de couverture. Si la couverture retournée est < Cmin, aucune pénalité liée au nombre de satellites n'est prise en compte.
+- Pbonus           : Active un bonus dans `fitness` pour les configurations utilisant moins de plans orbitaux.
 - Pbonus_coef      : Coefficient du bonus par plan vide.
 - Npenalty         : Active une pénalité liée au nombre total de satellites.
 - Npenalty_coef    : Coefficient de la pénalité par satellite.
+- p_mut            : Probabilité de mutation lors de `mutate_vec`.
+- p_add            : Probabilité d'ajouter un satellite lors de `mutate_vec`.
 
-Valeurs de retour
+# Valeurs de retour
 - best_vec : Vecteur optimal trouvé (taille P), donnant la répartition des satellites.
 - cov      : Couverture moyenne finale (résolution fine, n=100, dlat=1, dlon=1).
 - N        : Nombre total de satellites correspondant à `best_vec`.
 """
-function evolve_vec(P, N, F, i_deg, a, eps_deg; popsize=20, generations=30, Cmin=0.0, Pbonus=true, Pbonus_coef=0.2, Npenalty=true, Npenalty_coef=0.3)
+function evolve_vec(P, N, F, i_deg, a, eps_deg; popsize=20, generations=30, Cmin=0.0, Pbonus=true, Pbonus_coef=0.2, Npenalty=true, Npenalty_coef=0.3, p_mut=0.3, p_add=0.01)
 
     population = [random_vec(P, N) for _ in 1:popsize] # Population initiale
     best_vec = population[1]
@@ -275,14 +271,14 @@ function evolve_vec(P, N, F, i_deg, a, eps_deg; popsize=20, generations=30, Cmin
         
         if fits[order[1]] > best_fit
             best_fit = fits[order[1]] # Mise à jour de best_fit
-            best_vec = elite[1]
+            best_vec = elite[1] # Mise à jour de best_vec
         end
         
         newpop = copy(elite)
         while length(newpop) < popsize
             p = elite[rand(1:end)]
-            child = mutate_vec!(p) # Mutation d'un vecteur aléatoire
-            push!(newpop, child) # Ajout du mutant
+            child = mutate_vec(p; p_mut=p_mut, p_add=p_add)   # Mutation d'un vecteur aléatoire
+            push!(newpop, child)    # Ajout du mutant
         end
         population = newpop
     end

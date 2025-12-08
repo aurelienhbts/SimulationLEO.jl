@@ -1,22 +1,19 @@
 using LinearAlgebra
 
 """
-visible(r_ecef, lat_deg, lon_deg, eps_deg)
+    visible(r_ecef, lat_deg, lon_deg, eps_deg)
 
-Détermine si un satellite est visible depuis un point donné au sol, en se basant
-sur l'angle d'élévation minimal `eps_deg`.  
-La fonction calcule l'angle entre le vecteur position du satellite (en ECEF)
-et le vecteur normal au point au sol.  
-Si cet angle est compatible avec l'élévation minimale requise, le satellite est
-considéré comme visible.
+Détermine si un satellite est visible depuis un point donné au sol, en se basant sur l'angle d'élévation minimal `eps_deg`.  
+La fonction calcule l'angle entre le vecteur position du satellite (en ECEF) et le vecteur normal au point au sol.  
+Si cet angle est compatible avec l'élévation minimale requise, le satellite est considéré comme visible.
 
-Arguments
+# Arguments
 - r_ecef   : Vecteur position du satellite dans le repère ECEF.
 - lat_deg  : Latitude du point au sol (en degrés).
 - lon_deg  : Longitude du point au sol (en degrés).
 - eps_deg  : Angle d'élévation minimal (en degrés) pour considérer le satellite visible.
 
-Valeur retournée
+# Valeur retournée
 - true si le satellite satisfait la contrainte d'élévation minimale.
 - false sinon.
 """
@@ -38,25 +35,23 @@ function visible(r_ecef, lat_deg, lon_deg, eps_deg)
 end
 
 """
-coverage_fraction(sats, t, latmin, latmax, eps_deg; dlat=2, dlon=2)
+    coverage_fraction(sats, t, latmin, latmax, eps_deg; dlat=2, dlon=2)
 
 Calcule la fraction (%) de points visibles au moins par un satellite **à l'instant t**.
-La visibilité tient compte de l'élévation minimale `eps_deg`, c'est-à-dire de
-l'angle sous lequel un point au sol doit voir le satellite pour être considéré
-comme couvert.
+La visibilité tient compte de l'élévation minimale `eps_deg`, c'est-à-dire de l'angle sous lequel un point au sol doit voir le satellite pour être considéré comme couvert.
 
-Arguments
+# Arguments
 - sats     : Liste des satellites constituant la constellation.
 - t        : Instant d'évaluation (en secondes) dans le repère inertiel.
 - latmin   : Latitude minimale des points au sol à tester.
 - latmax   : Latitude maximale des points au sol à tester.
 - eps_deg  : Angle d'élévation minimal (en degrés) pour considérer un satellite visible.
 
-Paramètres optionnels
+# Paramètres optionnels
 - dlat     : Pas d'échantillonnage en latitude (en degrés).
 - dlon     : Pas d'échantillonnage en longitude (en degrés).
 
-Valeur retournée
+# Valeur retournée
 - Pourcentage de points visibles au moins par un satellite à l'instant t.
 """
 function coverage_fraction(sats, t, latmin, latmax, eps_deg; dlat=2, dlon=2)
@@ -109,25 +104,23 @@ function coverage_fraction(sats, t, latmin, latmax, eps_deg; dlat=2, dlon=2)
 end
 
 """
-mean_coverage_fraction(sats, latmin, latmax, eps_deg; n=100, dlat=2, dlon=2)
+    mean_coverage_fraction(sats, latmin, latmax, eps_deg; n=100, dlat=2, dlon=2)
 
-Calcule la fraction (%) des points visibles au moins par un satellite en moyenne
-sur une période orbitale complète.  
-Tient compte de l'élévation minimale `eps_deg` requise pour considérer qu'un point
-au sol est effectivement couvert.
+Calcule la fraction (%) des points visibles au moins par un satellite en moyenne sur une période orbitale complète.  
+Tient compte de l'élévation minimale `eps_deg` requise pour considérer qu'un point au sol est effectivement couvert.
 
-Arguments
+# Arguments
 - sats     : Liste d'objets satellites constituant la constellation.
 - latmin   : Latitude minimale (en degrés) des points au sol à évaluer.
 - latmax   : Latitude maximale (en degrés) des points au sol à évaluer.
 - eps_deg  : Angle d'élévation minimal pour considérer qu'un satellite couvre un point.
 
-Paramètres optionnels
+# Paramètres optionnels
 - n        : Nombre de pas de temps uniformément espacés sur une période orbitale.
 - dlat     : Résolution en latitude (en degrés) pour l'échantillonnage au sol.
 - dlon     : Résolution en longitude (en degrés) pour l'échantillonnage au sol.
 
-Valeur retournée
+# Valeur retournée
 - La couverture moyenne, exprimée en fraction, obtenue en évaluant la couverture
   à n instants répartis sur une période orbitale.
 """
@@ -143,24 +136,23 @@ function mean_coverage_fraction(sats, latmin, latmax, eps_deg; n=100, dlat=2, dl
 end
 
 """
-eval_constellation(vec, F, i_deg, a, eps_deg; n=100, dlat=2, dlon=2)
+    eval_constellation(vec, F, i_deg, a, eps_deg; n=100, dlat=2, dlon=2)
 
-Évalue une constellation décrite par le vecteur `vec` et retourne deux informations :
-la couverture moyenne obtenue sur une période ainsi que le nombre total de satellites.
+Évalue une constellation décrite par le vecteur `vec` et retourne la couverture moyenne obtenue sur une période ainsi que le nombre total de satellites.
 
-Arguments
+# Arguments
 - vec     : Vecteur indiquant le nombre de satellites dans chaque plan orbital.
 - F       : Paramètre de phasage (Walker-Delta) utilisé pour construire la constellation.
 - i_deg   : Inclinaison orbitale en degrés.
 - a       : Demi-grand axe de l'orbite (en mètres), généralement Re + altitude.
 - eps_deg : Angle d'élévation minimal pour considérer qu'un point au sol est couvert.
 
-Paramètres optionnels
+# Paramètres optionnels
 - n       : Nombre d'échantillons temporels utilisés pour évaluer la couverture moyenne.
 - dlat    : Résolution en latitude (en degrés) pour les points tests au sol.
 - dlon    : Résolution en longitude (en degrés) pour les points tests au sol.
 
-Valeurs retournées
+# Valeurs retournées
 - cov     : Couverture moyenne en pourcentage (fraction de points visibles en moyenne).
 - N       : Nombre total de satellites générés à partir de `vec`.
 """
