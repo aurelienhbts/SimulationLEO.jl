@@ -131,50 +131,72 @@ if !isfile("./Figures/satstest.gif")
 end
 
 # ╔═╡ 49421cdd-a296-4c84-8225-971ca3948ee7
+# ╠═╡ disabled = true
+#=╠═╡
 coverage_fraction(sats, t, -i_deg, i_deg, eps_deg; dlat=1, dlon=1)
+  ╠═╡ =#
 
 # ╔═╡ 47fee197-c516-4624-a8a8-63345ade9841
+# ╠═╡ disabled = true
+#=╠═╡
 begin
 	sats2 = walker_delta(2, 10, 1, i_deg ,a)
 	p_1 = show_coverage_heatmap(sats2, t, eps_deg)
 	p_2 = plot_constellation(sats2, t)
 	plot(p_1, p_2; layout=(1,2), size=(1300,600))
 end
+  ╠═╡ =#
 
 # ╔═╡ fa431955-2b5e-4379-bba0-fae209df6e47
+# ╠═╡ disabled = true
+#=╠═╡
 coverage_fraction(sats2, t, -i_deg, i_deg, eps_deg; dlat=1, dlon=1)
+  ╠═╡ =#
 
 # ╔═╡ f8f4c11b-b506-45df-b6b4-50abbe999c64
 PlutoUI.LocalResource("./Figures/coverage_fraction_période.png")
 
 # ╔═╡ bc5b4885-c49a-4fa3-8461-4e9f01998f09
+#=╠═╡
 mean_coverage_fraction(sats2, -i_deg, i_deg, eps_deg; n=100, dlat=2, dlon=2)
+  ╠═╡ =#
 
 # ╔═╡ 5b53534e-2155-4675-a271-454b92e3c96e
 PlutoUI.LocalResource("./Figures/convergence_mean_coverage.png")
 
-# ╔═╡ 4a646cfe-ec7f-444e-a987-de5dcf2ff38e
-empty!(FITCACHE) # A executer avant de changer de N, P, a ou des paramètres liés à 'fitness'
-
-# ╔═╡ 524192b6-7009-4907-978b-d45ef572260b
-length(FITCACHE)
-
-# ╔═╡ 5dfbca41-f0c7-4a1f-8f29-92a1376efcc1
-FITCACHE
-
 # ╔═╡ fff4d4f2-3965-4dbc-a76b-e649827a063d
-begin
+let
+	empty!(FITCACHE) # A executer avant de changer de N, P, a ou des paramètres liés à 'fitness'
+	iter = 1
+	atest = 550 *1e3 + Re
+	Pmax = 6
+	Ninit = 13
+	configs = Dict()
+	for _ in 1:iter
+		best_vec, cov_final, N_final = evolve_vec(Pmax, Ninit, F, i_deg, a, eps_deg; generations=100, Cmin=95)
+		if !haskey(configs,(best_vec, cov_final, N_final))
+			configs[(best_vec, cov_final, N_final)] = 1/iter * 100
+		else 
+			configs[(best_vec, cov_final, N_final)] += 1/iter * 100
+		end
+	end
+	configs = sort!(collect(configs), by = x -> x[1][2], rev=true)
+end
+
+# ╔═╡ 6c8b3b55-bfc2-43d7-9d88-f6119ff61ee1
+let
+	empty!(FITCACHE) # A executer avant de changer de N, P, a ou des paramètres liés à 'fitness'
 	iter = 10
 	atest = 550 *1e3 + Re
 	Pmax = 6
-	Ntest = 19
+	Ntest = 20
 	configs = Dict()
 	for _ in 1:iter
-		best_vec, best_cov, best_N = evolve_vec(Pmax, Ntest, F, i_deg, atest, eps_deg; popsize=20, generations=30, Cmin=90, Pbonus=true, Pbonus_coef=0.75, Npenalty=true, Npenalty_coef=0.1)
+		best_vec, best_cov = evolve_vec_fixedN(Pmax, Ntest, F, i_deg, atest, eps_deg; popsize=20, generations=50, Cmin=90, Pbonus=true)
 		if !haskey(configs,(best_vec,best_cov))
-			configs[(best_vec,best_cov,best_N)] = 1/iter * 100
+			configs[(best_vec,best_cov)] = 1/iter * 100
 		else 
-			configs[(best_vec,best_cov,best_N)] += 1/iter * 100
+			configs[(best_vec,best_cov)] += 1/iter * 100
 		end
 	end
 	configs = sort!(collect(configs), by = x -> x[1][2], rev=true)
@@ -209,10 +231,8 @@ PlutoUI.LocalResource("./Figures/convergence_cov_altitude_2.png")
 # ╟─f8f4c11b-b506-45df-b6b4-50abbe999c64
 # ╠═bc5b4885-c49a-4fa3-8461-4e9f01998f09
 # ╟─5b53534e-2155-4675-a271-454b92e3c96e
-# ╠═4a646cfe-ec7f-444e-a987-de5dcf2ff38e
-# ╠═524192b6-7009-4907-978b-d45ef572260b
-# ╠═5dfbca41-f0c7-4a1f-8f29-92a1376efcc1
 # ╠═fff4d4f2-3965-4dbc-a76b-e649827a063d
+# ╠═6c8b3b55-bfc2-43d7-9d88-f6119ff61ee1
 # ╟─77df1252-0b82-4ea1-bbd2-af8615bd8e10
 # ╟─556db4d2-7329-4c7d-b1ee-d98245d8756a
 # ╟─e6121f95-8f68-47e3-97ae-0c6422b80ee4
