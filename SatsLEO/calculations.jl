@@ -138,7 +138,7 @@ end
 """
     eval_constellation(vec, F, i_deg, a, eps_deg; n=100, dlat=2, dlon=2)
 
-Évalue une constellation décrite par le vecteur `vec` et retourne la couverture moyenne obtenue sur une période ainsi que le nombre total de satellites.
+Évalue une constellation décrite par le vecteur `vec` et retournela couverture moyenne obtenue sur une période ainsi que le nombre total de satellites.
 
 # Arguments
 - vec     : Vecteur indiquant le nombre de satellites dans chaque plan orbital.
