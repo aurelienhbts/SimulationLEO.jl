@@ -196,6 +196,7 @@ Cela permet une plus grande flexibilité que la version classique `walker_delta(
 """
 function myconstellation(vec,F,i_deg,a)
 	sats = Sat[]
+  sizehint!(sats, sum(vec))
 	P = length(vec)
 	for p in 1:P
 		S = vec[p]

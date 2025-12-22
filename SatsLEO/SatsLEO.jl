@@ -10,8 +10,9 @@ include("calculations.jl")
 export  visible, coverage_fraction, mean_coverage_fraction, eval_constellation
 
 include("optimisation.jl")
-export random_vec, mutate_vec_fixedN, fitness_fixedN, evolve_vec_fixedN,
-        mutate_vec, FITCACHE, fitness, evolve_vec
+export random_vec, mutate_vec, fitness, evolve_vec,
+       mutate_vec_fixedN, fitness_fixedN, evolve_vec_fixedN,
+       FITCACHE_GLOBAL, FITLOCK, FITCACHE_LOCAL, flush_fitcache!
 
 include("visualisation.jl")
 export show_coverage_heatmap, plot_constellation, plot_earth
