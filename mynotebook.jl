@@ -31,7 +31,7 @@ using Base.Threads # Pour la performance
 # ╔═╡ daca6429-e148-42d3-9499-bfd1dbc04531
 begin
 	using Logging
-	Logging.disable_logging(LogLevel(1000)) # Enlever les warnings
+	Logging.disable_logging(LogLevel(1)) # Enlever les warnings
 end
 
 # ╔═╡ bf43c4f4-11ce-455b-a3d2-5e1c11ab40d5
@@ -147,16 +147,19 @@ PlutoUI.LocalResource("./Figures/coverage_fraction_période.png")
 # ╔═╡ 5b53534e-2155-4675-a271-454b92e3c96e
 PlutoUI.LocalResource("./Figures/convergence_mean_coverage.png")
 
+# ╔═╡ c08f4857-5666-4346-b66d-7ed4a943973d
+empty!(FITCACHE)
+
 # ╔═╡ fff4d4f2-3965-4dbc-a76b-e649827a063d
 let
-	iter = 1
-	a_test = 20000 *1e3 + Re
-	i_deg_test = 85
+	iter = 5
+	a_test = 500 *1e3 + Re
+	i_deg_test = 63.4
 	Pmax = 6
-	Ninit = 10
+	Ninit = 20
 	configs = Dict()
 	for _ in 1:iter
-		best_vec, cov_final, N_final = evolve_vec(Pmax, Ninit, F, i_deg_test, a_test, eps_deg; nsats=6, generations=150, Ctarget=99)
+		best_vec, cov_final, N_final = evolve_vec(Pmax, Ninit, F, i_deg_test, a_test, eps_deg; nsats=1, generations=100, Ctarget=95, Ncoef=0.0, K=0.0)
 		if !haskey(configs,(best_vec, cov_final, N_final))
 			configs[(best_vec, cov_final, N_final)] = 1/iter * 100
 		else 
@@ -166,38 +169,26 @@ let
 	configs = sort!(collect(configs), by = x -> x[1][2], rev=true)
 end
 
-# ╔═╡ af03b53e-054f-4a7d-8dde-9d602870f6c3
-satstest = myconstellation([0 5 0 7 3 7],F,35,20000 *1e3 + Re)
-
-# ╔═╡ c47bd5af-6d3e-4abb-8dce-6cee3ff97bf1
-show_coverage_heatmap(satstest,t,eps_deg)
-
-# ╔═╡ 36553c13-2ec0-4859-8e05-3de510b7e657
-plot_constellation(satstest,t)
-
-# ╔═╡ 2f4a57ab-b397-4fec-8f54-ba1ccebef27c
-mean_coverage_fraction(satstest, -i_deg, i_deg, eps_deg; nsats=5)
+# ╔═╡ 2f6f8114-02b6-4380-8b4c-dc77a7862880
+# p_add et p_rem variables en fonction de Ctarget et best_cov (ok)
 
 # ╔═╡ 05899639-28f6-43e4-81ab-7f68e72ada48
-# Ajouter un Nmax 
-# Ajouter le fait qu'il faille plusieurs satellites par location 
-# (verifier 24 pour galileo ??) et voir l'impact si il y en a qui est defect
+# Ajouter un Nmax (ok)
+
+# ╔═╡ 2bbfeca6-9f80-46a6-a2cd-e6c2a8fb4bf1
+# Ajouter le fait qu'il faille plusieurs satellites par location (ok)
+# Verifier 24 pour galileo 
+# Voir l'impact si il y en a qui est defect
 # Comparer avec des constellations actuelles
 
 # ╔═╡ b269560d-ec58-4a02-a50a-5f3a6f91a111
 # PDOP → qualité du signal gnss (dilution of precision)
 # Calculer la line of sight des satellites 
-# Si la valeur est tres elevee, le gps n'est pas très précis
+# Si la valeur est tres élevée, le gps n'est pas très précis
 
 # ╔═╡ f9e6e837-1a81-41b4-8c6a-5bbfcb44c122
 # Equations très connues concernant la communication
 # Si l'amplitude du signal niveau donné → constel optimale
-
-# ╔═╡ c08f4857-5666-4346-b66d-7ed4a943973d
-length(FITCACHE)
-
-# ╔═╡ 52f4dd4b-db3b-4a97-bb96-883b8ea3232d
-empty!(FITCACHE) # A executer avant de changer des paramètres liés à 'fitness'
 
 # ╔═╡ 402783a9-e443-40ee-a1ba-93c7899d9085
 # Comment gérer le fait qu'il soit possible que plusieurs vec soient ajoutés au FITCACHE en même temps ?
@@ -206,11 +197,13 @@ empty!(FITCACHE) # A executer avant de changer des paramètres liés à 'fitness
 PlutoUI.LocalResource("./concurrent_write_dict.png")
 
 # ╔═╡ a38a8820-06d1-4716-af41-48bddf0af9b8
-# copie dans chaque threat et puis recombiner
+# copie dans chaque thread et puis recombiner
+# Plus facile à dire qu'à faire
+
+# ╔═╡ 7779dcf1-0f43-4eb5-92b8-c3b039c3f760
+empty!(FITCACHE_fixedN)
 
 # ╔═╡ 6c8b3b55-bfc2-43d7-9d88-f6119ff61ee1
-# ╠═╡ disabled = true
-#=╠═╡
 let
 	iter = 10
 	atest = 550 *1e3 + Re
@@ -227,10 +220,6 @@ let
 	end
 	configs = sort!(collect(configs), by = x -> x[1][2], rev=true)
 end
-  ╠═╡ =#
-
-# ╔═╡ 77df1252-0b82-4ea1-bbd2-af8615bd8e10
-PlutoUI.LocalResource("./collage.jpg")
 
 # ╔═╡ 556db4d2-7329-4c7d-b1ee-d98245d8756a
 PlutoUI.LocalResource("./Figures/convergence_cov_altitude.png")
@@ -255,20 +244,17 @@ PlutoUI.LocalResource("./Figures/convergence_cov_altitude_2.png")
 # ╠═47fee197-c516-4624-a8a8-63345ade9841
 # ╟─f8f4c11b-b506-45df-b6b4-50abbe999c64
 # ╟─5b53534e-2155-4675-a271-454b92e3c96e
+# ╠═c08f4857-5666-4346-b66d-7ed4a943973d
 # ╠═fff4d4f2-3965-4dbc-a76b-e649827a063d
-# ╠═af03b53e-054f-4a7d-8dde-9d602870f6c3
-# ╠═c47bd5af-6d3e-4abb-8dce-6cee3ff97bf1
-# ╠═36553c13-2ec0-4859-8e05-3de510b7e657
-# ╠═2f4a57ab-b397-4fec-8f54-ba1ccebef27c
+# ╠═2f6f8114-02b6-4380-8b4c-dc77a7862880
 # ╠═05899639-28f6-43e4-81ab-7f68e72ada48
+# ╠═2bbfeca6-9f80-46a6-a2cd-e6c2a8fb4bf1
 # ╠═b269560d-ec58-4a02-a50a-5f3a6f91a111
 # ╠═f9e6e837-1a81-41b4-8c6a-5bbfcb44c122
-# ╠═c08f4857-5666-4346-b66d-7ed4a943973d
-# ╠═52f4dd4b-db3b-4a97-bb96-883b8ea3232d
 # ╠═402783a9-e443-40ee-a1ba-93c7899d9085
 # ╟─89fbe235-53ba-4c9b-83a9-2fbc8fea3396
 # ╠═a38a8820-06d1-4716-af41-48bddf0af9b8
+# ╠═7779dcf1-0f43-4eb5-92b8-c3b039c3f760
 # ╠═6c8b3b55-bfc2-43d7-9d88-f6119ff61ee1
-# ╟─77df1252-0b82-4ea1-bbd2-af8615bd8e10
 # ╟─556db4d2-7329-4c7d-b1ee-d98245d8756a
 # ╟─e6121f95-8f68-47e3-97ae-0c6422b80ee4
