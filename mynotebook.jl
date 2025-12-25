@@ -150,16 +150,19 @@ PlutoUI.LocalResource("./Figures/convergence_mean_coverage.png")
 # ╔═╡ c08f4857-5666-4346-b66d-7ed4a943973d
 empty!(FITCACHE)
 
+# ╔═╡ aa6bf1f7-003e-42f7-a134-fe0f3ae62d10
+length(FITCACHE.threads[1])
+
 # ╔═╡ fff4d4f2-3965-4dbc-a76b-e649827a063d
 let
 	iter = 5
 	a_test = 500 *1e3 + Re
-	i_deg_test = 63.4
 	Pmax = 6
-	Ninit = 20
+	Ninit = 75
+	grid_ga = GroundGrid(-i_deg, i_deg; dlat=6, dlon=6) # Initialisation de GroundGrid
 	configs = Dict()
 	for _ in 1:iter
-		best_vec, cov_final, N_final = evolve_vec(Pmax, Ninit, F, i_deg_test, a_test, eps_deg; nsats=1, generations=100, Ctarget=95, Ncoef=0.0, K=0.0)
+		best_vec, cov_final, N_final = evolve_vec(Pmax, Ninit, F, i_deg, a_test, eps_deg; grid_ga, nsats=4, generations=100, Ctarget=99, Nmax=100)
 		if !haskey(configs,(best_vec, cov_final, N_final))
 			configs[(best_vec, cov_final, N_final)] = 1/iter * 100
 		else 
@@ -169,14 +172,7 @@ let
 	configs = sort!(collect(configs), by = x -> x[1][2], rev=true)
 end
 
-# ╔═╡ 2f6f8114-02b6-4380-8b4c-dc77a7862880
-# p_add et p_rem variables en fonction de Ctarget et best_cov (ok)
-
-# ╔═╡ 05899639-28f6-43e4-81ab-7f68e72ada48
-# Ajouter un Nmax (ok)
-
 # ╔═╡ 2bbfeca6-9f80-46a6-a2cd-e6c2a8fb4bf1
-# Ajouter le fait qu'il faille plusieurs satellites par location (ok)
 # Verifier 24 pour galileo 
 # Voir l'impact si il y en a qui est defect
 # Comparer avec des constellations actuelles
@@ -190,16 +186,6 @@ end
 # Equations très connues concernant la communication
 # Si l'amplitude du signal niveau donné → constel optimale
 
-# ╔═╡ 402783a9-e443-40ee-a1ba-93c7899d9085
-# Comment gérer le fait qu'il soit possible que plusieurs vec soient ajoutés au FITCACHE en même temps ?
-
-# ╔═╡ 89fbe235-53ba-4c9b-83a9-2fbc8fea3396
-PlutoUI.LocalResource("./concurrent_write_dict.png")
-
-# ╔═╡ a38a8820-06d1-4716-af41-48bddf0af9b8
-# copie dans chaque thread et puis recombiner
-# Plus facile à dire qu'à faire
-
 # ╔═╡ 7779dcf1-0f43-4eb5-92b8-c3b039c3f760
 empty!(FITCACHE_fixedN)
 
@@ -210,8 +196,9 @@ let
 	Pmax = 6
 	Ntest = 20
 	configs = Dict()
+	grid_ga = GroundGrid(-i_deg, i_deg; dlat=6, dlon=6) # Initialisation de GroundGrid
 	for _ in 1:iter
-		best_vec, best_cov = evolve_vec_fixedN(Pmax, Ntest, F, i_deg, atest, eps_deg; popsize=20, generations=50, Cmin=90, Pbonus=true)
+		best_vec, best_cov = evolve_vec_fixedN(Pmax, Ntest, F, i_deg, atest, eps_deg; grid_ga=grid_ga, popsize=20, generations=50, Cmin=90, Pbonus=true)
 		if !haskey(configs,(best_vec,best_cov))
 			configs[(best_vec,best_cov)] = 1/iter * 100
 		else 
@@ -245,15 +232,11 @@ PlutoUI.LocalResource("./Figures/convergence_cov_altitude_2.png")
 # ╟─f8f4c11b-b506-45df-b6b4-50abbe999c64
 # ╟─5b53534e-2155-4675-a271-454b92e3c96e
 # ╠═c08f4857-5666-4346-b66d-7ed4a943973d
+# ╠═aa6bf1f7-003e-42f7-a134-fe0f3ae62d10
 # ╠═fff4d4f2-3965-4dbc-a76b-e649827a063d
-# ╠═2f6f8114-02b6-4380-8b4c-dc77a7862880
-# ╠═05899639-28f6-43e4-81ab-7f68e72ada48
 # ╠═2bbfeca6-9f80-46a6-a2cd-e6c2a8fb4bf1
 # ╠═b269560d-ec58-4a02-a50a-5f3a6f91a111
 # ╠═f9e6e837-1a81-41b4-8c6a-5bbfcb44c122
-# ╠═402783a9-e443-40ee-a1ba-93c7899d9085
-# ╟─89fbe235-53ba-4c9b-83a9-2fbc8fea3396
-# ╠═a38a8820-06d1-4716-af41-48bddf0af9b8
 # ╠═7779dcf1-0f43-4eb5-92b8-c3b039c3f760
 # ╠═6c8b3b55-bfc2-43d7-9d88-f6119ff61ee1
 # ╟─556db4d2-7329-4c7d-b1ee-d98245d8756a
