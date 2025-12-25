@@ -1,5 +1,3 @@
-using LinearAlgebra
-
 ## Constantes
 const μ = 3.986004418e14 	# Paramètre gravitationnel terrestre (m³/s²)
 const Re = 6.371e6 		    # Rayon moyen de la Terre (m)s
@@ -8,9 +6,7 @@ const ωe = 7.2921150e-5 	# Vitesse de rotation de la Terre (rad/s)
 """
   Sat
 
-Structure représentant un satellite sur une orbite (supposée circulaire) autour de la Terre,
-définie par ses éléments orbitaux principaux : demi-grand axe, inclinaison, longitude du
-nœud ascendant et anomalie moyenne initiale.
+Structure représentant un satellite sur une orbite (supposée circulaire) autour de la Terre, définie par ses éléments orbitaux principaux : demi-grand axe, inclinaison, longitude du nœud ascendant et anomalie moyenne initiale.
 
 # Champs
 - a  : Demi-grand axe (m), distance moyenne au centre de la Terre.

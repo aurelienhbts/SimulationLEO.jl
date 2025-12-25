@@ -1,5 +1,3 @@
-using LinearAlgebra
-
 """
     visible(r_ecef, lat_deg, lon_deg, eps_deg)
 
@@ -55,63 +53,10 @@ La visibilité tient compte de l'élévation minimale `eps_deg`, c'est-à-dire d
 # Valeur retournée
 - Pourcentage de points visibles au moins par un satellite à l'instant t.
 """
-
-function coverage_fraction_old(sats, t, latmin, latmax, eps_deg; dlat=2, dlon=2, nsats=1)
-
-    r_ecef = [ecef_from_eci(eci_pos(s, t), t) for s in sats]
-    ρs = map(norm, r_ecef)
-    cosψmax_s = (Re ./ ρs) .* cos(deg2rad(eps_deg)) # On précalcule cosψmax (angle entre la direction du satellite et celle du point au sol)
-
-    lats = collect(latmin:dlat:latmax)
-    lons = collect(-180:dlon:180)
-
-    nthreads = Threads.nthreads()
-    covered_grid = fill(0, (length(lats), length(lons)))
-	covered = fill(0, (length(lats), length(lons)))
-    pts = fill(0, (length(lats), length(lons)))
-    
-    # Pour des raisons de performances, la fonction 'visible' est directement implémentée ici
-    Threads.@threads for i in eachindex(lats)
-        lat = lats[i]
-        ϕ = deg2rad(lat)
-        cosϕ = cos(ϕ) # On précalcule cosϕ pour ne pas le calculer plusieurs fois
-        sinϕ = sin(ϕ) # On précalcule sinϕ pour ne pas le calculer plusieurs fois
-
-        @inbounds for j in eachindex(lons)
-			lon = lons[j]
-            λ = deg2rad(lon)
-            cosλ = cos(λ)
-            sinλ = sin(λ)
-
-            # Vecteur qui pointe du centre de la Terre vers le point au sol défini par sa latitude et sa longitude. (repère ECEF)
-            gx = cosϕ * cosλ
-            gy = cosϕ * sinλ
-            gz = sinϕ
-
-            pts[i,j] += 1
-
-            for k in eachindex(r_ecef)
-                rx, ry, rz = r_ecef[k]
-                cosγ = (rx*gx + ry*gy + rz*gz) / ρs[k]
-                if cosγ >= cosψmax_s[k]
-                    covered_grid[i,j] += 1
-                    if covered_grid[i,j] == nsats
-						covered[i,j] += 1 # On compte le point si il y a plus de nsat satellites qui le couvrent
-                        break
-                    end
-                end
-            end
-        end
-    end
-    covered = sum(covered)
-    pts = sum(pts)
-    return 100 * covered / pts
-end
-
 function coverage_fraction(sats, t, latmin, latmax, eps_deg; dlat=2, dlon=2, nsats=1)
     r_ecef = [ecef_from_eci(eci_pos(s, t), t) for s in sats]
     ρs = map(norm, r_ecef)
-    cosψmax_s = (Re ./ ρs) .* cos(deg2rad(eps_deg))
+    cosψmax_s = (Re ./ ρs) .* cos(deg2rad(eps_deg)) # On précalcule cosψmax (angle entre la direction du satellite et celle du point au sol)
 
     lats = collect(latmin:dlat:latmax)
     lons = collect(-180:dlon:180)
@@ -120,16 +65,16 @@ function coverage_fraction(sats, t, latmin, latmax, eps_deg; dlat=2, dlon=2, nsa
     sinϕ = similar(lats, Float64)
     for i in eachindex(lats)
         ϕ = deg2rad(lats[i])
-        cosϕ[i] = cos(ϕ)
-        sinϕ[i] = sin(ϕ)
+        cosϕ[i] = cos(ϕ) # On précalcule cosϕ pour ne pas le calculer plusieurs fois
+        sinϕ[i] = sin(ϕ) # On précalcule sinϕ pour ne pas le calculer plusieurs fois
     end
 
     cosλ = similar(lons, Float64)
     sinλ = similar(lons, Float64)
     for j in eachindex(lons)
         λ = deg2rad(lons[j])
-        cosλ[j] = cos(λ)
-        sinλ[j] = sin(λ)
+        cosλ[j] = cos(λ) # On précalcule cosλ pour ne pas le calculer plusieurs fois
+        sinλ[j] = sin(λ) # On précalcule sinλ pour ne pas le calculer plusieurs fois
     end
 
     nlon = length(lons)
@@ -142,6 +87,7 @@ function coverage_fraction(sats, t, latmin, latmax, eps_deg; dlat=2, dlon=2, nsa
         local_cov = 0
 
         @inbounds for j in 1:nlon
+            # Vecteur qui pointe du centre de la Terre vers le point au sol défini par sa latitude et sa longitude. (repère ECEF)
             gx = cϕ * cosλ[j]
             gy = cϕ * sinλ[j]
             gz = sϕ
@@ -152,7 +98,7 @@ function coverage_fraction(sats, t, latmin, latmax, eps_deg; dlat=2, dlon=2, nsa
                 cosγ = (rx*gx + ry*gy + rz*gz) / ρs[k]
                 if cosγ >= cosψmax_s[k]
                     hit += 1
-                    if hit == nsats
+                    if hit == nsats # On compte le point si il y a plus de nsat satellites qui le couvrent
                         local_cov += 1
                         break
                     end
@@ -181,7 +127,7 @@ Tient compte de l'élévation minimale `eps_deg` requise pour considérer qu'un 
 - eps_deg  : Angle d'élévation minimal pour considérer qu'un satellite couvre un point.
 
 # Paramètres optionnels
-- n        : Nombre de pas de temps uniformément espacés sur une période orbitale.
+- n        : Nombre de pas de temps pour évaluer une période orbitale.
 - dlat     : Résolution en latitude (en degrés) pour l'échantillonnage au sol.
 - dlon     : Résolution en longitude (en degrés) pour l'échantillonnage au sol.
 - nsats    : Nombre de satellites minimal qui doivent couvrir chaque point au sol.
@@ -204,7 +150,7 @@ end
 """
     eval_constellation(vec, F, i_deg, a, eps_deg; n=100, dlat=2, dlon=2, nsats=1)
 
-Évalue une constellation décrite par le vecteur `vec` et retournela couverture moyenne obtenue sur une période ainsi que le nombre total de satellites.
+Évalue une constellation décrite par le vecteur `vec` et retourne la couverture moyenne obtenue sur une période ainsi que le nombre total de satellites.
 
 # Arguments
 - vec     : Vecteur indiquant le nombre de satellites dans chaque plan orbital.
@@ -214,7 +160,7 @@ end
 - eps_deg : Angle d'élévation minimal pour considérer qu'un point au sol est couvert.
 
 # Paramètres optionnels
-- n       : Nombre d'échantillons temporels utilisés pour évaluer la couverture moyenne.
+- n        : Nombre de pas de temps pour évaluer une période orbitale.
 - dlat    : Résolution en latitude (en degrés) pour les points tests au sol.
 - dlon    : Résolution en longitude (en degrés) pour les points tests au sol.
 - nsats    : Nombre de satellites minimal qui doivent couvrir chaque point au sol.
